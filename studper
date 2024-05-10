@@ -1,0 +1,72 @@
+import numpy as np
+import pandas as pd
+from scipy import stats
+import matplotlib.pyplot as plt
+
+df=pd.read_csv('academicperformance.csv')
+
+df.head()
+
+df.isnull().sum()
+
+
+mean_value = df['SEmarks'].mean()
+print(mean_value)
+df['SEmarks']=df['SEmarks'].fillna(mean_value)
+
+
+
+q1 = df['FEmarks'].quantile(0.25)
+q3 = df['FEmarks'].quantile(0.75)
+iqr = q3 - q1    #Interquartile range
+lower_boundry = q1 - (1.5*iqr)
+upper_boundry = q3 + (1.5*iqr)
+print("IQR", iqr, "Lower and upper boundry ",lower_boundry,upper_boundry )
+
+#finding outliers having value <  lower_boundry and > upper_boundry
+outliers = df[(df['FEmarks'] < lower_boundry) | (df['FEmarks'] > upper_boundry)]
+# df = df.drop(outliers.index)
+
+
+df.at[7,"SEmarks"]=20
+st=df.loc[:,'SEmarks'].std()
+st
+
+from scipy import stats
+z = np.abs(stats.zscore(df['SEmarks']))
+print(z)
+
+plt.scatter(df['FEmarks'],df['SEmarks'])
+
+threshold_z = 2
+
+outlier_indices = np.where(z > threshold_z)[0]
+no_outliers = df.drop(outlier_indices)
+print("Original DataFrame Shape:", df.shape)
+print("DataFrame Shape after Removing Outliers:", no_outliers.shape)
+no_outliers
+
+df.columns
+
+num_cols = ['FEmarks', 'SEmarks', 'TEmarks', 'BEmarks']
+df.boxplot(num_cols)
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+newdf = df.copy()
+newdf[num_cols] = scaler.fit_transform(newdf[num_cols])
+newdf
+
+no_outliers
+
+def decimal_scaling_normalization(x):
+    max_abs_val = x.abs().max()
+    num_digits = len(str(int(max_abs_val)))
+    scaling_factor = 10 ** num_digits
+    return x / scaling_factor
+
+# Apply Decimal Scaling normalization to the 'FEmarks' column
+df['FEmarks_Normalized'] = decimal_scaling_normalization(df['SEmarks'])
+
+df['FEmarks_Normalized']
+
